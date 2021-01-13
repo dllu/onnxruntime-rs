@@ -148,15 +148,11 @@ impl<'s, 'a, TIn: Element, DIn: Dimension> RunnerBuilder<'s, 'a, TIn, DIn> {
     }
 
     #[inline]
-    pub fn with_output<TOut: Element, DOut: Dimension>(
+    pub fn with_output_shapes<TOut: Element, DOut: Dimension>(
         self,
+        shapes: Vec<Vec<usize>>,
     ) -> Result<Runner<'s, 'a, TIn, DIn, TOut, DOut>> {
-        Runner::new(self.session, self.input_arrays)
-    }
-
-    #[inline]
-    pub fn with_output_dyn<TOut: Element>(self) -> Result<Runner<'s, 'a, TIn, DIn, TOut, IxDyn>> {
-        Runner::new(self.session, self.input_arrays)
+        Runner::new(self.session, self.input_arrays, shapes)
     }
 }
 
@@ -176,12 +172,12 @@ impl<'s, 'a, TIn: Element, DIn: Dimension, TOut: Element, DOut: Dimension>
     pub fn new(
         session: &'s Session<'a>,
         input_arrays: impl IntoIterator<Item = Array<TIn, DIn>>,
+        output_shapes: Vec<Vec<usize>>,
     ) -> Result<Self> {
         let input_names_ptr = names_to_ptrs(session.inputs.iter().map(|i| i.name.clone()));
         let output_names_ptr = names_to_ptrs(session.outputs.iter().map(|o| o.name.clone()));
         let input_arrays = input_arrays.into_iter().collect::<Vec<_>>();
         session.validate_input_shapes(&input_arrays)?;
-        let output_shapes = compute_output_shapes(&input_arrays, &session.outputs);
         let output_arrays = arrays_with_shapes::<_, DOut>(&output_shapes)?;
         let input_ort_tensors = arrays_to_tensors(&session.memory_info, input_arrays)?;
         let input_ort_values_ptr = tensors_to_ptr(&input_ort_tensors);

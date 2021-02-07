@@ -50,7 +50,9 @@ fn main() {
 
     // Optionally add more execution providers via session_options
     // E.g. for CUDA include cuda_provider_factory.h and uncomment the following line:
-    // OrtSessionOptionsAppendExecutionProvider_CUDA(sessionOptions, 0);
+    unsafe {
+        OrtSessionOptionsAppendExecutionProvider_CUDA(session_options_ptr, 0);
+    }
 
     //*************************************************************************
     // create session and load model into memory
